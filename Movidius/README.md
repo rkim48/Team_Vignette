@@ -6,7 +6,5 @@ The train_mnist_model.py script will save the MNIST trained model.
 
 The inference_mnist_model.py script removes specific lines from the trained model such as import data code and dropout layers. When this script is run, the mnist_inference.graph file will be created to be used for compiling. 
 
-The run.py script will compile the graph file.
-
-The MNIST data folder is used to test the compiled network on the NCS. 
+The run.py script will perform inference on the data in the MNIST data using the NCS. 
 

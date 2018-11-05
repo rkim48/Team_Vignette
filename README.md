@@ -1,2 +1,2 @@
-# Team_Vignette
+# Team Vignette
 ECE Senior Design: Team Vignette

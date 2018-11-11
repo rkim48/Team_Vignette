@@ -64,10 +64,12 @@ checkpoint:
 data: check_model
 	@echo "\n$(YELLOW)Downloading dataset...$(NOCOLOR)"
 	(python3 $(TF_MODELS_PATH)/research/slim/download_and_convert_data.py \
-		--dataset_name=pgdata\
+		--dataset_name=pg\
 		--dataset_dir=data;)
 	#(cd data; wget -nc http://download.tensorflow.org/example_images/flower_photos.tgz;)
 	#(cd data; tar -xvf flower_photos.tgz;)
+	# no need to download images, just cd into the data directory which should have the p&g data folder
+	(cd data;)
 
 .PHONY: train
 train: data checkpoint
@@ -75,7 +77,7 @@ train: data checkpoint
 	(python3 $(TF_MODELS_PATH)/research/slim/train_image_classifier.py \
 		--train_dir=model \
 		--dataset_dir=data \
-		--dataset_name=p&gdata \
+		--dataset_name=pg \
 		--dataset_split_name=train \
 		--model_name=$(MODEL_NAME) \
 		--checkpoint_path=model/$(MODEL_CKPT).ckpt \
@@ -92,31 +94,31 @@ export: check_model
 		--alsologtostderr \
 		--model_name=$(MODEL_NAME) \
 		--batch_size=1 \
-		--dataset_name=p&gdata\
+		--dataset_name=pg\
 		--image_size=$(IMGSIZE) \
-		--output_file=$(MODEL_CKPT)_p&g.pb;)
+		--output_file=$(MODEL_CKPT)_pg.pb;)
 
 .PHONY: freeze
 freeze: check_tf checkpoint export
 	@echo $(YELLOW)"\nFreezing model for inference..."$(NOCOLOR)
 	(cd model; python3 $(TF_SRC_PATH)/tensorflow/python/tools/freeze_graph.py \
-		--input_graph=$(MODEL_CKPT)_p&g.pb \
+		--input_graph=$(MODEL_CKPT)_pg.pb \
 		--input_binary=true \
 		--input_checkpoint=model.ckpt-10000 \
-		--output_graph=$(MODEL_CKPT)_p&g_frozen.pb \
+		--output_graph=$(MODEL_CKPT)_pg_frozen.pb \
 		--output_node_name=$(OUTPUT_NODE_NAME);)
 
 .PHONY: compile
 compile: freeze
 	@echo $(YELLOW)"\nCompiling model to Movidius graph..."$(NOCOLOR)
-	(cd model; mvNCCompile -s 12 $(MODEL_CKPT)_p&g_frozen.pb -in=input -on=$(OUTPUT_NODE_NAME);)
+	(cd model; mvNCCompile -s 12 $(MODEL_CKPT)_pg_frozen.pb -in=input -on=$(OUTPUT_NODE_NAME);)
 	@echo $(YELLOW)"Movidius graph generated! You can run inferences using ncappzoo/apps/image-classifier project.\n"$(NOCOLOR)
 
 .PHONY: profile
 profile: freeze
 	@echo $(CURDIR)
 	@echo $(YELLOW)"\nProfiling the model..."$(NOCOLOR)
-	(cd model; mvNCProfile -s 12 $(MODEL_CKPT)_p&g_frozen.pb -in=input -on=$(OUTPUT_NODE_NAME);)
+	(cd model; mvNCProfile -s 12 $(MODEL_CKPT)_pg_frozen.pb -in=input -on=$(OUTPUT_NODE_NAME);)
 	@echo $(YELLOW)"Movidius graph generated! You can run inferences using ncappzoo/apps/image-classifier project.\n"$(NOCOLOR)
 
 .PHONY: check

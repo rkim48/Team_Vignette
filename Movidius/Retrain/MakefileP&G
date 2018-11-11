@@ -75,7 +75,7 @@ train: data checkpoint
 	(python3 $(TF_MODELS_PATH)/research/slim/train_image_classifier.py \
 		--train_dir=model \
 		--dataset_dir=data \
-		--dataset_name=pgdata \
+		--dataset_name=p&gdata \
 		--dataset_split_name=train \
 		--model_name=$(MODEL_NAME) \
 		--checkpoint_path=model/$(MODEL_CKPT).ckpt \
@@ -92,7 +92,7 @@ export: check_model
 		--alsologtostderr \
 		--model_name=$(MODEL_NAME) \
 		--batch_size=1 \
-		--dataset_name=pgdata\
+		--dataset_name=p&gdata\
 		--image_size=$(IMGSIZE) \
 		--output_file=$(MODEL_CKPT)_p&g.pb;)
 
@@ -100,7 +100,7 @@ export: check_model
 freeze: check_tf checkpoint export
 	@echo $(YELLOW)"\nFreezing model for inference..."$(NOCOLOR)
 	(cd model; python3 $(TF_SRC_PATH)/tensorflow/python/tools/freeze_graph.py \
-		--input_graph=$(MODEL_CKPT)_flowers.pb \
+		--input_graph=$(MODEL_CKPT)_p&g.pb \
 		--input_binary=true \
 		--input_checkpoint=model.ckpt-10000 \
 		--output_graph=$(MODEL_CKPT)_p&g_frozen.pb \

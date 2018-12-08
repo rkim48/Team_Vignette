@@ -1,5 +1,5 @@
 Vignette Communication Module Info:
-
+- 'tcp_client.py' is on the PI and 'tcp_server.py' should be on your laptop/an actual web server
 - Outgoing data is sent from 'tcp_client.py' to the same port (5005) opened
   on a laptop (set up on my laptop)
 - bind_ip is the IPv4 address of your webserver/laptop

@@ -160,7 +160,25 @@ while True:
                         (boxes, scores, classes, num) = sess.run(
                             [detection_boxes, detection_scores, detection_classes, num_detections],
                             feed_dict={image_tensor: frame_expanded})
-
+                    
+                        
+                        top_scores = np.where(scores > 0.85)
+                        classes_recognized = classes[top_scores]
+                        print(classes_recognized)
+                        labels = ['crest','dawn','head shoulders','tide']
+                        
+                        if len(classes_recognized) > 0:
+                            csv_data = pd.read_csv('/home/pi/Vignette Data/item_frequency.csv', header= None).values
+                            for item in classes_recognized:
+                                class_label = labels[int(item)-1]
+                                itemindex = np.where(csv_data[:,0]==class_label)
+                                csv_data[itemindex,1] = csv_data[itemindex,1] + 1
+                            csv_data = pd.DataFrame(csv_data)
+                            csv_data.to_csv('/home/pi/Vignette Data/item_frequency.csv',index=False, header = None)
+                        
+                        
+                        
+                        
                         # Draw the results of the detection (aka 'visulaize the results')
                         vis_util.visualize_boxes_and_labels_on_image_array(
                             frame,
@@ -189,44 +207,6 @@ while True:
                     camera.release()
 
                     cv2.destroyAllWindows()
-                    
-##                    #Taking Photo with Camera
-##                    pygame.init()
-##                    pygame.camera.init()
-##                    cam = pygame.camera.Camera("/dev/video0",(224,224))
-##                    cam.start()
-##                    image= cam.get_image()
-##                    now = datetime.datetime.now()
-##                    pic_name = '/home/pi/Vignette Data/images/' + str(now) +'.jpg'
-##                    pygame.image.save(image,pic_name)
-##                    cam.stop()
-##            
-##                    #Classifiying Image
-##                    tense = lab.read_tensor_from_image_file(pic_name,input_height = 224, input_width = 224)
-##                    
-##                    input_name = "import/" + 'Placeholder'
-##                    output_name = "import/" + 'final_result'
-##                    input_operation = graph.get_operation_by_name(input_name)
-##                    output_operation = graph.get_operation_by_name(output_name)
-##          
-##                    with tf.Session(graph=graph) as sess:
-##                        results = sess.run(output_operation.outputs[0], {
-##                            input_operation.outputs[0]: tense
-##                        })
-##                    results = np.squeeze(results)
-##
-##                    top_k = results.argsort()[-5:][::-1]
-##                    for i in top_k:
-##                        print(labels[i], results[i])
-##                    
-##                    if results[top_k[0]] >= 0.80:
-##                        csv_data = pd.read_csv('/home/pi/Vignette Data/item_frequency.csv', header= None).values
-##                        itemindex = np.where(csv_data[:,0]==labels[top_k[0]])
-##                        csv_data[itemindex,1] = csv_data[itemindex,1] + 1
-####                      index = csv_data.index[csv_data['KEY'] == labels[top_k[0]]] 
-####                      csv_data.loc[index,'VAL'] = csv_data.loc[index,'VAL'] + 1
-##                        csv_data = pd.DataFrame(csv_data)
-##                        csv_data.to_csv('/home/pi/Vignette Data/item_frequency.csv',index=False, header = None)
                 
                 #Restarts voice decoding  
                 decoder_2.end_utt()

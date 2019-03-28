@@ -8,6 +8,9 @@ import ntpath
 import argparse
 import skimage.io
 import skimage.transform
+import time
+import datetime
+import csv
 
 import mvnc.mvncapi as mvnc
 from draw_box import *
@@ -53,7 +56,14 @@ def load_graph( device ):
     return graph, fifo_in, fifo_out
 
 # ---- Step 3: Pre-process the images ----------------------------------------
-    
+
+old_time = time.time()
+use_time = time.time()
+item_dict = {"bounce":0, "febreeze":0, "gain":0, "tide":0}
+old_coord = 0
+startup = True
+class_pause_flag = False
+
 def infer_image(graph, fifo_in, fifo_out ):
 
     # Grab a frame from the camera
@@ -78,7 +88,42 @@ def infer_image(graph, fifo_in, fifo_out ):
     score_threshold = 0.07
     iou_threshold = 0.07
     
-    output_image = postprocessing(output, input_image, score_threshold, iou_threshold, 416, 416)
+    output_image, pg_class, coords = postprocessing(output, input_image, score_threshold, iou_threshold, 416, 416)
+    
+    global old_time, old_coord, startup, use_time, class_pause_flag, item_dict
+    
+
+
+    coord_thresh = 130
+    if class_pause_flag == True & abs((time.time() - use_time) > 5):
+        class_pause_flag = False
+        print("Ready to detect next use!")
+    if ((time.time() - old_time) > 1.0) & (len(pg_class) > 0) & (len(coords)>0):
+        new_coord = coords[0]
+        #print(abs(new_coord-old_coord),coord_thresh)
+        if (abs(new_coord - old_coord) > coord_thresh) & (startup == False) & (class_pause_flag==False):
+            print("Use of {} detected! Coordinate movement of:{}".format(pg_class[0],abs(new_coord-old_coord)))
+            if pg_class[0] == 'bounce':
+                item_dict['bounce'] += 1
+            elif pg_class[0] == 'febreeze':
+                item_dict['febreeze'] += 1
+            elif pg_class[0] == 'gain':
+                item_dict['gain'] += 1
+            elif pg_class[0] == 'tide':
+                item_dict['tide'] += 1
+                
+            print(item_dict)
+                
+            
+        
+            
+            class_pause_flag = True
+            use_time = time.time()
+        old_time = time.time()
+        startup = False
+        old_coord = new_coord
+            
+    
     
     return input_image, frame, output_image
 
@@ -134,6 +179,13 @@ def main():
         # Display the frame for 5ms, and close the window so that the next frame 
         # can be displayed. Close the window if 'q' or 'Q' is pressed.
         if( cv2.waitKey( 1 ) & 0xFF == ord( 'q' ) ):
+            #os.remove('yolo_inferences.csv')
+            with open( 'yolo_inferences.csv', 'a', newline='' ) as csvfile:
+
+                inference_log = csv.writer( csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL )
+                inference_log.writerow(['Key','Value'])
+                for key in item_dict.keys():
+                    inference_log.writerow([key,item_dict[key]])
             break
 
     clean_up(device, graph, fifo_in, fifo_out)

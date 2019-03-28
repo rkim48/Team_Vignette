@@ -139,15 +139,19 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
 
 
   # Draw final B-Boxes and label on input image
+  classes_seen = []
+  coordinates = []
   for i in range(len(nms_predictions)):
       color = colors[classes.index(nms_predictions[i][2])]
       best_class_name = nms_predictions[i][2]
-
+      classes_seen.append(best_class_name)
+      coordinates.append(nms_predictions[i][0][1])
       # Put a class rectangle with B-Box coordinates and a class label on the image
       input_image = cv2.rectangle(input_image,(nms_predictions[i][0][0],nms_predictions[i][0][1]),(nms_predictions[i][0][2],nms_predictions[i][0][3]),color)
       cv2.putText(input_image,best_class_name,(int((nms_predictions[i][0][0]+nms_predictions[i][0][2])/2),int((nms_predictions[i][0][1]+nms_predictions[i][0][3])/2)),cv2.FONT_HERSHEY_SIMPLEX,1,color,3)
-  
-  return input_image
+  res = list(zip(classes_seen, coordinates))
+  #print(res)
+  return input_image, classes_seen, coordinates
 
 
 

@@ -86,7 +86,7 @@ directory though. If you want to see the different responses to
     Then, open your localhost url/whatever server IP it says that index.html
     is being hosted on.
 
-6) Blow your fuckin load because this project will make us millions.
+6) Get excited because this project will make us millions.
 
 7) Move to Silicon Valley and turn this project into a company.
 
